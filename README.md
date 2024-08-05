@@ -8,29 +8,76 @@ Compile the Multiplier2() circuit and verify it against a smart contract verifie
 ```
 pragma circom 2.0.0;
 
-/*This circuit template checks that c is the multiplication of a and b.*/  
+template OurCircuits() {  
 
-template Multiplier2 () {  
+  // Signal Input 
+    signal input a;
+    signal input b;
 
-   // Declaration of signals.  
-   signal input a;  
-   signal input b;  
-   signal output c;  
+  // Signal from And Gate :
+    signal x;
 
-   // Constraints.  
-   c <== a * b;  
+ // Signal from Not Gate :
+    signal y ;    
+ 
+  // Final Signal Output 
+  signal output Q;
+
+  // component gate use to create custom circuits 
+  component andGate = AND();
+  component notGate = NOT();
+  component orGate = OR();
+
+  // circuit Logic 
+
+  andGate.a <== a;
+  andGate.b <== b;
+  x <== andGate.out;
+
+  notGate.in <== b;
+  y <== notGate.out;
+
+  orGate.a <== x;
+  orGate.b <== y;
+
+  Q <== orGate.out;
+  
 }
-component main = Multiplier2();
+
+template AND() {
+    signal input a;
+    signal input b;
+    signal output out;
+
+   out <== a*b;
+}
+
+template NOT() {
+    signal input in;
+    signal output out;
+
+    out <== 1 + in - 2*in;
+}
+template OR() {
+    signal input a;
+    signal input b;
+    signal output out;
+
+    out <== a + b - a*b;
+}
+
+component main = OurCircuits();
 ```
 ### Install
 `npm i`
 
 ### Compile
-`npx hardhat circom` 
+`npx hardhat circom --verbose` 
 This will generate the **out** file with circuit intermediaries and geneate the **MultiplierVerifier.sol** contract
 
 ### Prove and Deploy
 `npx hardhat run scripts/deploy.ts`
+
 This script does 4 things  
 1. Deploys the MultiplierVerifier.sol contract
 2. Generates a proof from circuit intermediaries with `generateProof()`
